@@ -2,7 +2,7 @@ function [A_new,A_outs] = outlier_detection(A_in)
 % function [A_new,A_outs] = outlier_detection(A)
 % 
 % This function implements outlier detection with methods shown in
-% "A Systematic Method for Outlier Detection in Human Gait Data",ICORR 2022)
+% Bradley Hobbs and Panagiotis Artemiadis, “A Systematic Method for Outlier Detection in Human Gait Data,” in the 2022 IEEE 17th International Conference on Rehabilitation Robotics (ICORR), 2022
 %
 % Input: A - matrix of values with gait cycle periods in each row and with 
 %            each gait cycle sample observation in each column, OR
