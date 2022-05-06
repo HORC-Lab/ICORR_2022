@@ -261,14 +261,17 @@ for C = 1:ns5                                                           % for al
 end                                                                     % end
 
 %% Choose Maximum Value (Or Similar) of Hypothesis Testing Results
-[~,locs] = findpeaks(eta);  % Find local maximum values
-if isempty(locs)            % if there are no local maximum values (usually due to too few sources)
-    C_final = floor(ns5/2); % Choose median value
-else                        % else in the case of at least one local maximum
-    C_final = locs(1);      % choose the first local maximum
-end                         % end
-C_conf = C_final/ns5;       % calculate confidence percentage for each gait cycle
-F      = (H >= C_final);    % Use C to determine final vector of outlier labels where periods of C_final or higher are outliers
+[~,locs] = findpeaks(eta);        % Find local maximum values
+if isempty(locs)                  % if there are no local maximum values (usually due to too few sources)
+    C_final = floor(ns5/2);       % Choose median value
+elseif ns5 <= 5                   % else in the case of at least one local maximum, and in the case of small number of sources and/or flagging procedures
+    C_final = locs(1);            % Just choose the first local maximum
+else                              % else for large enough datasets, eta creates a curve similar to a concave down and decreasing exponential decay function 
+    [~,C_final] = max(eta);       % Choose the local maximum nearest to the knee/elbow/bend of eta for the most conservative C_final.
+end                               % end
+C_final = median(H) + (3*std(H)); % non statistics-based alternative that requires less tuning. Comment to not use.
+C_conf = C_final/ns5;             % calculate confidence percentage for each gait cycle
+F      = (H >= C_final);          % Use C to determine final vector of outlier labels where periods of C_final or higher are outliers
 end                       
 
 
