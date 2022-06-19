@@ -249,29 +249,33 @@ function [F,conf,C_conf] = pfdp(H,A)
 %                   expressed as a confidence percentage
 
 %% Calculate All Possible Combinations of Outliers based on confidence level        
-ns5   = size(H,2);                                                      % Number of sources * number of flagging procedures
-H     = sum(H,2);                                                       % Add up all flags for each gait cycle
-conf  = H./ns5;                                                         % Calculate the confidence that each gait cycle is an outlier
-eta   = zeros([1 ns5]);                                                 % Initialize vector of hypothesis results sums
-for C = 1:ns5                                                           % for all possible cutoff values C
-    N      = A(H < C,:);                                                % Testing as tentative non-outliers N
-    O      = A(H >= C,:);                                               % Testing as tentative outliers O
-    etaXi  = ttest2(N,O,'alpha',.05,'tail','both','vartype','unequal'); % Use 2-sample t-test with unequal means at a 5% confidence interval for each column/vertical slice between the two sets
-    eta(C) = sum(etaXi);                                                % Sum hypothesis testing results for all np*ns partitions
-end                                                                     % end
+ns5   = size(H,2);                                                          % Number of sources * number of flagging procedures
+H     = sum(H,2);                                                           % Add up all flags for each gait cycle
+conf  = H./ns5;                                                             % Calculate the confidence that each gait cycle is an outlier
+eta   = zeros([1 ns5]);                                                     % Initialize vector of hypothesis results sums
+method = 2;                                                                 % Method 1: statistics based approach used in paper. Method 2: faster approach
+if method == 1                                                              % if method 1 is being used
+    for C = 1:ns5                                                           % for all possible cutoff values C
+        N      = A(H < C,:);                                                % Testing as tentative non-outliers N
+        O      = A(H >= C,:);                                               % Testing as tentative outliers O
+        etaXi  = ttest2(N,O,'alpha',.05,'tail','both','vartype','unequal'); % Use 2-sample t-test with unequal means at a 5% confidence interval for each column/vertical slice between the two sets
+        eta(C) = sum(etaXi);                                                % Sum hypothesis testing results for all np*ns partitions
+    end                                                                     % end
 
-%% Choose Maximum Value (Or Similar) of Hypothesis Testing Results
-[~,locs] = findpeaks(eta);        % Find local maximum values
-if isempty(locs)                  % if there are no local maximum values (usually due to too few sources)
-    C_final = floor(ns5/2);       % Choose median value
-elseif ns5 <= 5                   % else in the case of at least one local maximum, and in the case of small number of sources and/or flagging procedures
-    C_final = locs(1);            % Just choose the first local maximum
-else                              % else for large enough datasets, eta creates a curve similar to a concave down and decreasing exponential decay function 
-    [~,C_final] = max(eta);       % Choose the local maximum nearest to the knee/elbow/bend of eta for the most conservative C_final.
-end                               % end
-C_final = median(H) + (3*std(H)); % non statistics-based alternative that requires less tuning. Comment to not use.
-C_conf = C_final/ns5;             % calculate confidence percentage for each gait cycle
-F      = (H >= C_final);          % Use C to determine final vector of outlier labels where periods of C_final or higher are outliers
+    %% Choose Maximum Value (Or Similar) of Hypothesis Testing Results
+    [~,locs] = findpeaks(eta);        % Find local maximum values
+    if isempty(locs)                  % if there are no local maximum values (usually due to too few sources)
+        C_final = floor(ns5/2);       % Choose median value
+    elseif ns5 <= 5                   % else in the case of at least one local maximum, and in the case of small number of sources and/or flagging procedures
+        C_final = locs(1);            % Just choose the first local maximum
+    else                              % else for large enough datasets, eta creates a curve similar to a concave down and decreasing exponential decay function 
+        [~,C_final] = max(eta);       % Choose the local maximum nearest to the knee/elbow/bend of eta for the most conservative C_final.
+    end                               % end
+elseif method == 2                    % else if method 2 is being used
+    C_final = median(H) + (3*std(H)); % non statistics-based alternative that requires less tuning
+end                                   % end either method
+C_conf = C_final/ns5;                 % calculate confidence percentage for each gait cycle
+F      = (H >= C_final);              % Use C to determine final vector of outlier labels where periods of C_final or higher are outliers
 end                       
 
 
