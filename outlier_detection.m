@@ -1,4 +1,4 @@
-function [A_new,A_outs] = outlier_detection(A_in)
+function [A_new,A_outs,F] = outlier_detection(A_in)
 % function [A_new,A_outs] = outlier_detection(A)
 % 
 % This function implements outlier detection with methods shown in
